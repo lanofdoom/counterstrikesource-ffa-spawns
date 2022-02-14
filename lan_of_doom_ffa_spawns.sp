@@ -4,10 +4,11 @@
 public const Plugin myinfo = {
     name = "FFA Spawns", author = "LAN of DOOM",
     description = "Changes spawn points on a map when friendly fire is enabled",
-    version = "1.0.0",
+    version = "0.8.0",
     url = "https://github.com/lanofdoom/counterstrikesource-ffa-spawns"};
 
-static const float kMinimumPreferredDistanceToPlayer = 600.0;
+static const float kPreferredDistanceToPlayer = 600.0;
+static const float kMinimumDistanceToPlayer = 100.0;
 
 static ConVar g_friendlyfire_cvar;
 
@@ -48,61 +49,15 @@ static void gg_aim_shotty() {
   g_spawn_origins.PushArray({-223.968750, -101.524330, 128.031250});
   g_spawn_origins.PushArray({42.464027, -192.902557, 256.031250});
   g_spawn_origins.PushArray({-262.473236, -184.145264, 256.031250});
+
+  for (int i = 0; i < g_spawn_origins.Length; i++) {
+    g_spawn_angles.PushArray({0.0, 0.0, 0.0});
+  }
 }
 
 //
 // Logic
 //
-
-static void GetSpawnPoint(int index, float origin[3], float angle[3]) {
-  g_spawn_origins.GetArray(index, origin);
-
-  if (g_spawn_angles.Length == 0) {
-    angle[0] = 0.0;
-    angle[1] = 0.0;
-    angle[2] = 0.0;
-  } else {
-    g_spawn_angles.GetArray(index, angle);
-  }
-}
-
-static int GetNumSpawnPoints() { return g_spawn_origins.Length; }
-
-static bool IsPreferredSpawn(int spawning_client, float spawn_location[3]) {
-  for (int other_client = 1; other_client <= MaxClients; other_client++) {
-    if (spawning_client == other_client || !IsClientInGame(other_client)) {
-      continue;
-    }
-
-    float other_location[3];
-    GetClientAbsOrigin(other_client, other_location);
-
-    float x = spawn_location[0] - spawn_location[0];
-    float y = spawn_location[1] - spawn_location[1];
-    float z = spawn_location[2] - spawn_location[2];
-
-    float distance = SquareRoot(x * x + y * y + z * z);
-    if (distance < kMinimumPreferredDistanceToPlayer) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static int GetNumPreferredSpawnPoints(int client) {
-  int count = 0;
-  for (int i = 0; i < GetNumSpawnPoints(); i++) {
-    float origin[3];
-    float angle[3];
-    GetSpawnPoint(i, origin, angle);
-
-    if (IsPreferredSpawn(client, origin)) {
-      count += 1;
-    }
-  }
-  return count;
-}
 
 static void LoadSpawnPoints() {
   g_spawn_origins.Clear();
@@ -114,6 +69,47 @@ static void LoadSpawnPoints() {
   if (StrEqual(map_name, "gg_aim_shotty")) {
     gg_aim_shotty();
   }
+
+  if (g_spawn_origins.Length != g_spawn_angles.Length) {
+    ThrowError("Unequal number of spawn origins and spawn angles");
+  }
+}
+
+static void FilterSpawnPoints(int spawning_client, float min_distance,
+                              ArrayList origins, ArrayList angles) {
+  origins.Clear();
+  angles.Clear();
+
+  for (int i = 0; i < g_spawn_origins.Length; i++) {
+    float xyz[3];
+    g_spawn_origins.GetArray(i, xyz);
+
+    bool add_to_list = true;
+    for (int other_client = 1; other_client <= MaxClients; other_client++) {
+      if (spawning_client == other_client || !IsClientInGame(other_client)) {
+        continue;
+      }
+
+      float other_location[3];
+      GetClientAbsOrigin(other_client, other_location);
+
+      float x = xyz[0] - other_location[0];
+      float y = xyz[1] - other_location[1];
+      float z = xyz[2] - other_location[2];
+
+      float distance = SquareRoot(x * x + y * y + z * z);
+      if (distance < min_distance) {
+        add_to_list = false;
+        break;
+      }
+    }
+
+    if (add_to_list) {
+      origins.PushArray(xyz);
+      g_spawn_angles.GetArray(i, xyz);
+      angles.PushArray(xyz);
+    }
+  }
 }
 
 //
@@ -122,7 +118,7 @@ static void LoadSpawnPoints() {
 
 static Action OnPlayerSpawn(Handle event, const char[] name,
                             bool dontBroadcast) {
-  if (!g_friendlyfire_cvar.BoolValue || GetNumSpawnPoints() == 0) {
+  if (!g_friendlyfire_cvar.BoolValue || g_spawn_origins.Length == 0) {
     return Plugin_Continue;
   }
 
@@ -136,26 +132,29 @@ static Action OnPlayerSpawn(Handle event, const char[] name,
     return Plugin_Continue;
   }
 
-  int num_preferred_spawns = GetNumPreferredSpawnPoints(client);
+  ArrayList origins = CreateArray(3);
+  ArrayList angles = CreateArray(3);
+  FilterSpawnPoints(client, kPreferredDistanceToPlayer, origins, angles);
+  if (origins.Length == 0) {
+    FilterSpawnPoints(client, kMinimumDistanceToPlayer, origins, angles);
+  }
 
   float origin[3];
   float angle[3];
-  if (num_preferred_spawns != 0) {
-    int preferred_spawn_index = GetRandomInt(1, num_preferred_spawns);
-    int spawn_index = 0;
-    while (preferred_spawn_index != 0) {
-      GetSpawnPoint(spawn_index, origin, angle);
-
-      if (IsPreferredSpawn(client, origin)) {
-        preferred_spawn_index -= 1;
-      }
-    }
+  if (origins.Length == 0) {
+    int spawn_index = GetRandomInt(0, g_spawn_origins.Length - 1);
+    g_spawn_origins.GetArray(spawn_index, origin);
+    g_spawn_angles.GetArray(spawn_index, angle);
   } else {
-    int spawn_index = GetRandomInt(0, GetNumSpawnPoints() - 1);
-    GetSpawnPoint(spawn_index, origin, angle);
+    int spawn_index = GetRandomInt(0, origins.Length - 1);
+    origins.GetArray(spawn_index, origin);
+    angles.GetArray(spawn_index, angle);
   }
 
   TeleportEntity(client, origin, angle, NULL_VECTOR);
+
+  CloseHandle(origins);
+  CloseHandle(angles);
 
   return Plugin_Continue;
 }
@@ -174,6 +173,4 @@ public void OnPluginStart() {
   HookEvent("player_spawn", OnPlayerSpawn);
 }
 
-public void OnMapStart() {
-  LoadSpawnPoints();
-}
+public void OnMapStart() { LoadSpawnPoints(); }
