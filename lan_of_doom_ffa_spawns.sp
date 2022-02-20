@@ -1,3 +1,4 @@
+#include <cstrike>
 #include <sdktools>
 #include <sourcemod>
 
@@ -341,6 +342,11 @@ static Action OnPlayerSpawn(Handle event, const char[] name,
 
   int client = GetClientOfUserId(userid);
   if (!client) {
+    return Plugin_Continue;
+  }
+
+  int team = GetClientTeam(client);
+  if (team != CS_TEAM_T && team != CS_TEAM_CT) {
     return Plugin_Continue;
   }
 
