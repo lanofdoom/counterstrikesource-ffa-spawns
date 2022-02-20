@@ -5,7 +5,7 @@
 public const Plugin myinfo = {
     name = "FFA Spawns", author = "LAN of DOOM",
     description = "Changes spawn points on a map when friendly fire is enabled",
-    version = "0.9.0",
+    version = "1.0.0",
     url = "https://github.com/lanofdoom/counterstrikesource-ffa-spawns"};
 
 static const float kPreferredDistanceToPlayer = 600.0;
