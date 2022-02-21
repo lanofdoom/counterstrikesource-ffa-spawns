@@ -5,7 +5,7 @@
 public const Plugin myinfo = {
     name = "FFA Spawns", author = "LAN of DOOM",
     description = "Changes spawn points on a map when friendly fire is enabled",
-    version = "1.0.0",
+    version = "1.0.1",
     url = "https://github.com/lanofdoom/counterstrikesource-ffa-spawns"};
 
 static const float kPreferredDistanceToPlayer = 600.0;
@@ -31,7 +31,6 @@ static void gg_autumn() {
   g_spawn_origins.PushArray({-568.031250, 284.031250, -7.968750});
   g_spawn_origins.PushArray({-743.968750, 373.693359, -7.968750});
   g_spawn_origins.PushArray({-844.327514, 771.716186, -15.963692});
-  g_spawn_origins.PushArray({-163.631881, 831.016357, 5.150990});
   g_spawn_origins.PushArray({722.494018, 762.401977, -13.061019});
   g_spawn_origins.PushArray({381.058227, 288.031250, -7.968750});
   g_spawn_origins.PushArray({723.851623, 750.265258, -14.337684});
@@ -44,7 +43,6 @@ static void gg_autumn() {
   g_spawn_origins.PushArray({376.031250, -220.031250, -7.968750});
   g_spawn_origins.PushArray({551.640014, -304.549804, -7.968750});
   g_spawn_origins.PushArray({664.859924, -757.897766, -15.135843});
-  g_spawn_origins.PushArray({-115.121749, -750.543701, -4.293827});
   g_spawn_origins.PushArray({-747.994567, 567.968750, -127.968750});
   g_spawn_origins.PushArray({551.968750, 368.126953, -7.968750});
   g_spawn_origins.PushArray({382.662322, 295.283935, -127.968750});
@@ -60,7 +58,6 @@ static void gg_autumn() {
   g_spawn_angles.PushArray({0.000000, 131.196212, 0.000000});
   g_spawn_angles.PushArray({0.000000, 52.620269, 0.000000});
   g_spawn_angles.PushArray({0.000000, -54.101703, 0.000000});
-  g_spawn_angles.PushArray({0.000000, -91.782562, 0.000000});
   g_spawn_angles.PushArray({0.000000, -139.434555, 0.000000});
   g_spawn_angles.PushArray({0.000000, 62.957462, 0.000000});
   g_spawn_angles.PushArray({0.000000, -139.893859, 0.000000});
@@ -73,7 +70,6 @@ static void gg_autumn() {
   g_spawn_angles.PushArray({0.000000, -50.097732, 0.000000});
   g_spawn_angles.PushArray({0.000000, -175.713745, 0.000000});
   g_spawn_angles.PushArray({0.000000, 131.270263, 0.000000});
-  g_spawn_angles.PushArray({0.000000, 87.116119, 0.000000});
   g_spawn_angles.PushArray({0.000000, -50.065555, 0.000000});
   g_spawn_angles.PushArray({0.000000, 129.920822, 0.000000});
   g_spawn_angles.PushArray({0.000000, 73.677223, 0.000000});
